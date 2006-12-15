@@ -1,0 +1,11 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+lib/Finance/Math/IRR.pm
+META.yml                                 Module meta-data (added by MakeMaker)
+t/01_test_compile.t
+t/02_test_irr_errors.t
+t/03_test_irr.t
+t/pod-coverage.t
+t/pod.t
