@@ -23,6 +23,7 @@ This module depends on:
 
    Math::Polynom
    Date::Calc
+   Scalar::Util
 
 AUTHOR
 

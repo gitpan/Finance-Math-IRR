@@ -2,9 +2,10 @@
 #
 #   Finance::Math::IRR - Calculate the internal rate of return of a cash flow
 #
-#   $Id: IRR.pm,v 1.2 2006/12/15 17:39:57 erwan Exp $
+#   $Id: IRR.pm,v 1.3 2006/12/18 12:59:09 erwan Exp $
 #
 #   061215 erwan Started implementation
+#   061218 erwan Differentiate bugs from failures when calling secant() and brent()
 #
 
 package Finance::Math::IRR;
@@ -21,7 +22,21 @@ use base qw(Exporter);
 
 our @EXPORT = qw(xirr);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
+
+#----------------------------------------------------------------
+#
+#   _crash - die with a usable error description
+#
+
+sub _crash {
+    my($method,$poly,$args,$err) = @_;
+
+    croak "BUG: something went wrong while calling Math::Polynom::$method with the arguments:\n".
+	Dumper($args)."on the polynomial:\n".
+	Dumper(\$poly)."the error was: [$err]\n".
+	"Please email all this output to erwan\@cpan.org\n";
+}
 
 #----------------------------------------------------------------
 #
@@ -76,7 +91,17 @@ sub xirr {
     };
     
     if ($@) {
-	# secant failed. let's find two points where the polynomial is positive respectively negative
+	# secant failed. let's make sure it was not a bug
+	if ($poly->error != Math::Polynom::ERROR_NAN && 
+	    $poly->error != Math::Polynom::ERROR_DIVIDE_BY_ZERO && 
+	    $poly->error != Math::Polynom::ERROR_MAX_DEPTH) 
+	{
+	    # ok, the method did not fail, something else did
+	    _crash("secant", $poly, {p0 => 0.5, p1 => 1, precision => $precision, max_depth => 50}, $@);
+	}
+	
+	
+	# let's find two points where the polynomial is positive respectively negative
 	my $i = 1;
 	while ( (!defined $poly->xneg || !defined $poly->xpos) && $i <= 1024 ) {
 	    $poly->eval( $i );
@@ -85,7 +110,7 @@ sub xirr {
 	}
 	
 	if ( !defined $poly->xneg || !defined $poly->xpos ) {
-	    # we did not find 2 points where the polynomial is >0 and <0. can't use Brent's method (nor the bisection)
+	    # we did not find 2 points where the polynomial is >0 and <0, so we can't use Brent's method (nor the bisection)
 	    return undef;
 	}
 
@@ -95,8 +120,16 @@ sub xirr {
 	};
 	
 	if ($@) {
-	    # even Brent failed.
-	    # that must be an interesting cash flow! PLEASE!! mail it to erwan@cpan.org!!
+	    # Brent's method failed
+
+	    if ($poly->error != Math::Polynom::ERROR_NAN && 
+		$poly->error != Math::Polynom::ERROR_MAX_DEPTH) 
+	    {
+		# looks like a bug, either in Math::Polynom's implementation of Brent of in the arguments we sent to it
+		_crash("brent", $poly, {a => $poly->xneg, b => $poly->xpos, precision => $precision, max_depth => 50}, $@);
+	    }
+
+	    # Brent's method was unable to approximate the root
 	    return undef;
 	}
     }
@@ -106,7 +139,7 @@ sub xirr {
 	return undef;
     }
 
-    return 1/$root -1;
+    return -1 + 1/$root;
 }
 
 1;
@@ -122,12 +155,12 @@ Finance::Math::IRR - Calculate the internal rate of return of a cash flow
     use Finance::Math::IRR;
 
     # we provide a cash flow
-    my $cashflow = {
+    my %cashflow = (
         '2001-01-01' => 100,
         '2001-03-15' => 250.45,
         '2001-03-20' => -50,
         '2001-06-23' => -763.12,  # the last transaction should always be <= 0
-    };
+    );
 
     # and get the internal rate of return for this cashflow
     # we want a precision of 0.1%
@@ -163,13 +196,12 @@ There is no universal way to solve this equation analytically. Instead,
 we have to find the polynomial's root with various root finding algorithms.
 That's where the fun starts...
 
-The approach of Finance::Math::IRR is to try to solve the IRR equation
-using the secant method. If it fails, Brent's method is tried. Brent's
-method is guaranteed to succeed but requires that we know of 2 values
-where the polynomial is respectively positive and negative. Finance::Math::IRR
-uses reasonable heuristics to guess such values. But it may fail.
-
-
+The approach of Finance::Math::IRR is to try to approximate one of the polynomial's 
+roots with the secant method. If it fails, Brent's method is tried. However, Brent's
+method requires to know of an interval such that the polynomial is positive on one
+end of the interval and negative on the other. Finance::Math::IRR searches for such
+an interval by trying systematically a sequence of points. But it may fail to find
+such an interval and therefore fail to approximate the cash flow's IRR:
 
 
 =head1 API
@@ -180,17 +212,16 @@ uses reasonable heuristics to guess such values. But it may fail.
 
 Calculates an approximation of the internal rate of return (IRR) of 
 the provided cash flow. The returned IRR will be within I<$float> 
-of the exact IRR. The cashflow is a reference to a hash having the
-following structure:
+of the exact IRR. The cashflow is a hash with the following structure:
 
     my %cashflow = (
-        # date => transaction-amount
+        # date => transaction_amount
         '2006-01-01' => 15,
         '2006-01-15' => -5,
         '2006-03-15' => -8,
     );
 
-To get the IRR in percent, multiply the xirr's result by 100.
+To get the IRR in percent, multiply xirr's result by 100.
 
 If I<precision> is omitted, it defaults to 0.001, yielding 0.1%
 precision on the resulting IRR.
@@ -208,15 +239,16 @@ Finance::Math::IRR uses a slightly different technique as the
 corresponding XIRR function in Gnumeric.
 
 Gnumeric uses first Newton's method to approximate the IRR. If
-it fails, it evaluates the polynomial on a sequence of points ( '-1 + 10/(i+9)' and 'i' 
-with i from 1 to 1024), hoping to find 2 points where the polynomial
+it fails, it evaluates the polynomial on a sequence of points 
+( '-1 + 10/(i+9)' and 'i' with i from 1 to 1024), hoping to find 
+2 points where the polynomial
 is respectively positive and negative. If it finds 2 such points,
 gnumeric's XIRR then uses the bisection method on their interval.
 
 Finance::Math::IRR has a slightly different strategy. It uses the
 secant method instead of Newton's, and Brent's method instead of
-the bisection. Both methods are believed to be more robust than
-their Gnumeric counterparts.
+the bisection. Both methods are believed to be superior to their
+Gnumeric counterparts.
 
 
 =head1 BUGS AND LIMITATIONS
@@ -236,7 +268,7 @@ See Math::Polynom, Math::Function::Roots.
 
 =head1 VERSION
 
-$Id: IRR.pm,v 1.2 2006/12/15 17:39:57 erwan Exp $
+$Id: IRR.pm,v 1.3 2006/12/18 12:59:09 erwan Exp $
 
 =head1 THANKS
 
@@ -244,7 +276,7 @@ Kind thanks to Gautam Satpathy who provided me with his own implementation
 of XIRR written in Java.
 
 Thanks to the team of Gnumeric for releasing their implementation of XIRR
-in open source. For the curious, the source code of XIRR is available in
+in open source. For the curious, the code for XIRR is available in
 the sources of gnumeric in the file 'plugins/fn-financial/functions.c' (as
 of gnumeric 1.6.3).
 
