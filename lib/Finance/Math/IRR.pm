@@ -2,7 +2,7 @@
 #
 #   Finance::Math::IRR - Calculate the internal rate of return of a cash flow
 #
-#   $Id: IRR.pm,v 1.6 2007/01/04 10:04:25 erwan Exp $
+#   $Id: IRR.pm,v 1.7 2007/01/04 13:11:13 erwan Exp $
 #
 #   061215 erwan Started implementation
 #   061218 erwan Differentiate bugs from failures when calling secant() and brent()
@@ -24,7 +24,7 @@ use base qw(Exporter);
 
 our @EXPORT = qw(xirr);
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 #----------------------------------------------------------------
 #
@@ -279,12 +279,12 @@ See Math::Polynom, Math::Function::Roots.
 
 =head1 VERSION
 
-$Id: IRR.pm,v 1.6 2007/01/04 10:04:25 erwan Exp $
+$Id: IRR.pm,v 1.7 2007/01/04 13:11:13 erwan Exp $
 
 =head1 THANKS
 
 Kind thanks to Gautam Satpathy (C<< gautam@satpathy.in >>) who provided me with his own implementation
-of XIRR written in Java. Its source can be found at http://www.satpathy.in/jxitt/index.html.
+of XIRR written in Java. Its source can be found at http://www.satpathy.in/jxirr/index.html.
 
 Thanks to the team of Gnumeric for releasing their implementation of XIRR
 in open source. For the curious, the code for XIRR is available in
