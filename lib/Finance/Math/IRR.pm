@@ -2,10 +2,12 @@
 #
 #   Finance::Math::IRR - Calculate the internal rate of return of a cash flow
 #
-#   $Id: IRR.pm,v 1.3 2006/12/18 12:59:09 erwan Exp $
+#   $Id: IRR.pm,v 1.6 2007/01/04 10:04:25 erwan Exp $
 #
 #   061215 erwan Started implementation
 #   061218 erwan Differentiate bugs from failures when calling secant() and brent()
+#   061218 erwan Handle precision correctly
+#   061218 erwan Support cashflows with only 0 amounts
 #
 
 package Finance::Math::IRR;
@@ -22,7 +24,7 @@ use base qw(Exporter);
 
 our @EXPORT = qw(xirr);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 #----------------------------------------------------------------
 #
@@ -34,7 +36,7 @@ sub _crash {
 
     croak "BUG: something went wrong while calling Math::Polynom::$method with the arguments:\n".
 	Dumper($args)."on the polynomial:\n".
-	Dumper(\$poly)."the error was: [$err]\n".
+	Dumper($poly)."the error was: [$err]\n".
 	"Please email all this output to erwan\@cpan.org\n";
 }
 
@@ -44,7 +46,7 @@ sub _crash {
 #
 
 sub xirr {
-    my $precision = 0.001;
+    my $precision = 0.001; # default precision seeked on irr, ie 0.1%
     my $guess = 0.1;
     my %cashflow;
     my $root;
@@ -62,14 +64,23 @@ sub xirr {
     # TODO: compute the precision as provided to secant/brent to get this precision on IRR
 
     # check arguments
+    my $all_zeros = 1;
     while (my($date,$amount) = each %cashflow) {
 	croak "ERROR: the provided cashflow contains undefined values"           if (!defined $date || !defined $amount);
 	croak "ERROR: invalid date in the provided cashflow [$date]"             if ($date !~ /^\d\d\d\d-\d\d-\d\d$/);
 	croak "ERROR: invalid amount in the provided cashflow at date [$date]"   if (!looks_like_number($amount));
+	$all_zeros = 0 if ($amount != 0);
     }
-    
+
     croak "ERROR: precision is not a valid number"        if (!defined $precision || !looks_like_number($precision));
     croak "ERROR: the cashflow you provided is too small" if (scalar keys %cashflow < 2);
+
+    # if the cashflow only contains 0 amounts, the irr is 0%
+    return 0 if ($all_zeros);
+
+    # we want $precision on the irr, but can only steer the precision of 1/(1+irr), hence this ratio, that
+    # should insure us the given precision even on the irr for irrs up to 1000%
+    $precision = $precision / 1000;
 
     # build the polynomial whose solution is x=1/(1+IRR)
     my @sorted_keys = sort keys %cashflow;
@@ -235,7 +246,7 @@ I<xirr> will croak if you feed it with junk.
 =head1 DISCUSSION
 
 Finding the right strategy to solve the IRR equation is tricky.
-Finance::Math::IRR uses a slightly different technique as the
+Finance::Math::IRR uses a slightly different technique than the
 corresponding XIRR function in Gnumeric.
 
 Gnumeric uses first Newton's method to approximate the IRR. If
@@ -268,12 +279,12 @@ See Math::Polynom, Math::Function::Roots.
 
 =head1 VERSION
 
-$Id: IRR.pm,v 1.3 2006/12/18 12:59:09 erwan Exp $
+$Id: IRR.pm,v 1.6 2007/01/04 10:04:25 erwan Exp $
 
 =head1 THANKS
 
-Kind thanks to Gautam Satpathy who provided me with his own implementation
-of XIRR written in Java.
+Kind thanks to Gautam Satpathy (C<< gautam@satpathy.in >>) who provided me with his own implementation
+of XIRR written in Java. Its source can be found at http://www.satpathy.in/jxitt/index.html.
 
 Thanks to the team of Gnumeric for releasing their implementation of XIRR
 in open source. For the curious, the code for XIRR is available in

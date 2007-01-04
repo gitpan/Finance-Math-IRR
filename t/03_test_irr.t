@@ -1,5 +1,5 @@
 #
-#   $Id: 03_test_irr.t,v 1.2 2006/12/15 17:42:11 erwan Exp $
+#   $Id: 03_test_irr.t,v 1.4 2006/12/18 15:48:12 erwan Exp $
 #
 #   test Finance::Math::IRR against a number of cashflows
 #   verified with excell's XIRR
@@ -7,7 +7,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 7;
 use lib "../lib/";
 
 use_ok('Finance::Math::IRR');
@@ -118,7 +118,31 @@ test_xirr(undef, precision => 0.00001,
 	  '2001-12-31' =>        0.00,
 	  ); 
 
+# that one would induce an error in Math::Polynom
+test_xirr(0, precision => 0.00001,
+	  '2001-01-01' =>        0.00,
+	  '2001-12-31' =>        0.00,
+	  ); 
 
+# a real life exemple
+test_xirr(-0.047480, precision => 0.00001,
+	  '2003-01-28' =>        67.67,
+	  '2003-02-28' =>        67.67,
+	  '2003-03-28' =>        67.67,
+	  '2003-04-28' =>        67.67,
+	  '2003-05-28' =>        67.67,
+	  '2003-06-28' =>        67.67,
+	  '2003-07-28' =>        67.67,
+	  '2003-08-28' =>        67.67,
+	  '2003-09-28' =>        67.67,
+	  '2003-10-28' =>        67.67,
+	  '2003-11-28' =>        67.67,
+	  '2003-12-28' =>        67.67,
+	  '2005-02-03' =>        -5.00,
+	  '2005-03-03' =>        -4.00,
+	  '2005-04-03' =>        -4.00,
+	  '2005-04-15' =>      -732.65,
+);
 
 
 
