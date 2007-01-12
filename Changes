@@ -14,3 +14,6 @@ Revision history for Perl extension Finance::Math::IRR
 0.04  2007-01-04
         - fix broken link
 
+0.05  2007-01-12
+        - require version 0.05 of Math::Polynom
+

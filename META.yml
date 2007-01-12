@@ -1,12 +1,12 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Finance-Math-IRR
-version:      0.04
+version:      0.05
 version_from: lib/Finance/Math/IRR.pm
 installdirs:  site
 requires:
     Date::Calc:                    5.4
-    Math::Polynom:                 0.02
+    Math::Polynom:                 0.05
     Scalar::Util:                  1.18
 
 distribution_type: module
