@@ -8,6 +8,7 @@
 #   061218 erwan Differentiate bugs from failures when calling secant() and brent()
 #   061218 erwan Handle precision correctly
 #   061218 erwan Support cashflows with only 0 amounts
+#   070220 erwan Support when secant converges toward a non root value
 #
 
 package Finance::Math::IRR;
@@ -24,7 +25,7 @@ use base qw(Exporter);
 
 our @EXPORT = qw(xirr);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 #----------------------------------------------------------------
 #
@@ -100,12 +101,13 @@ sub xirr {
     eval {
 	$root = $poly->secant(p0 => 0.5, p1 => 1, precision => $precision, max_depth => 50);
     };
-    
+
     if ($@) {
 	# secant failed. let's make sure it was not a bug
 	if ($poly->error != Math::Polynom::ERROR_NAN && 
 	    $poly->error != Math::Polynom::ERROR_DIVIDE_BY_ZERO && 
-	    $poly->error != Math::Polynom::ERROR_MAX_DEPTH) 
+	    $poly->error != Math::Polynom::ERROR_MAX_DEPTH &&
+	    $poly->error != Math::Polynom::ERROR_NOT_A_ROOT) 
 	{
 	    # ok, the method did not fail, something else did
 	    _crash("secant", $poly, {p0 => 0.5, p1 => 1, precision => $precision, max_depth => 50}, $@);
@@ -134,7 +136,8 @@ sub xirr {
 	    # Brent's method failed
 
 	    if ($poly->error != Math::Polynom::ERROR_NAN && 
-		$poly->error != Math::Polynom::ERROR_MAX_DEPTH) 
+		$poly->error != Math::Polynom::ERROR_MAX_DEPTH &&
+		$poly->error != Math::Polynom::ERROR_NOT_A_ROOT)
 	    {
 		# looks like a bug, either in Math::Polynom's implementation of Brent of in the arguments we sent to it
 		_crash("brent", $poly, {a => $poly->xneg, b => $poly->xpos, precision => $precision, max_depth => 50}, $@);
@@ -212,7 +215,7 @@ roots with the secant method. If it fails, Brent's method is tried. However, Bre
 method requires to know of an interval such that the polynomial is positive on one
 end of the interval and negative on the other. Finance::Math::IRR searches for such
 an interval by trying systematically a sequence of points. But it may fail to find
-such an interval and therefore fail to approximate the cash flow's IRR:
+such an interval and therefore fail to approximate the cashflow's IRR:
 
 
 =head1 API
@@ -222,7 +225,7 @@ such an interval and therefore fail to approximate the cash flow's IRR:
 =item xirr(%cashflow, precision => $float)
 
 Calculates an approximation of the internal rate of return (IRR) of 
-the provided cash flow. The returned IRR will be within I<$float> 
+the provided cashflow. The returned IRR will be within I<$float> 
 of the exact IRR. The cashflow is a hash with the following structure:
 
     my %cashflow = (
@@ -259,8 +262,9 @@ gnumeric's XIRR then uses the bisection method on their interval.
 Finance::Math::IRR has a slightly different strategy. It uses the
 secant method instead of Newton's, and Brent's method instead of
 the bisection. Both methods are believed to be superior to their
-Gnumeric counterparts.
-
+Gnumeric counterparts. Finance::Math::IRR performs additional
+controls to guaranty the validity of the result, such as controlling
+that the root candidate returned by Secant and Brent really are roots.
 
 =head1 BUGS AND LIMITATIONS
 
@@ -269,7 +273,7 @@ environments and thoroughly tested. It is therefore
 believed to be robust.
 
 Yet, the method used in xirr may fail to find the IRR even
-on cash flows that do have an IRR. If you happen to find
+on cashflows that do have an IRR. If you happen to find
 such an example, please email it to the author at
 C<< <erwan@cpan.org> >>.
 

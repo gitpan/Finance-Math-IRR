@@ -6,7 +6,7 @@ WriteMakefile(
     NAME              => 'Finance::Math::IRR',
     VERSION_FROM      => 'lib/Finance/Math/IRR.pm', # finds $VERSION
     PREREQ_PM         => {
-	Math::Polynom => 0.05,
+	Math::Polynom => 0.06,
 	Date::Calc    => 5.4,
 	Scalar::Util  => 1.18,
     },

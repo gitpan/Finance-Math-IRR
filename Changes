@@ -14,6 +14,10 @@ Revision history for Perl extension Finance::Math::IRR
 0.04  2007-01-04
         - fix broken link
 
-0.05  2007-01-12
+0.05  2007-02-20
         - require version 0.05 of Math::Polynom
 
+0.06  2007-02-20
+        - more robust strategy: handle when the secant method
+          converges toward a value that is not a root
+        - more tests
