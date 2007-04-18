@@ -21,3 +21,16 @@ Revision history for Perl extension Finance::Math::IRR
         - more robust strategy: handle when the secant method
           converges toward a value that is not a root
         - more tests
+
+0.07  2007-04-11
+        - cleanup cashflow from transactions with 0 amounts
+        - added debug mode
+        - reject cashflows with positive last transaction
+        - return undef on cashflows with only 1 none 0 amount
+        - updated META.yml to new spec
+        - added examples
+        - more tests
+
+0.08  2007-04-18
+        - fixed MANIFEST
+        - updated license

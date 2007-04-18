@@ -1,7 +1,13 @@
+#!/usr/local/bin/perl
+#################################################################
 #
-#   $Id: 01_test_compile.t,v 1.1 2006/12/15 14:36:09 erwan Exp $
+#   $Id: 01_test_compile.t,v 1.1 2007/04/11 12:22:52 erwan_lemonnier Exp $
 #
-#   test that Finance::Math::IRR compiles
+#   @author       erwan lemonnier
+#   @description  test that Finance::Math::IRR compiles
+#   @system       pluto
+#   @function     base
+#   @function     vf
 #
 
 use strict;
