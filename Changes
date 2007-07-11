@@ -34,3 +34,7 @@ Revision history for Perl extension Finance::Math::IRR
 0.08  2007-04-18
         - fixed MANIFEST
         - updated license
+
+0.09  2007-07-11
+        - removed the restriction requiring last transactions to be negative
+          thanks to Nicholas Caratzas!

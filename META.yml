@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Finance-Math-IRR
-version:             0.08
+version:             0.09
 abstract:            Calculate the internal rate of return of a cash flow
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.32

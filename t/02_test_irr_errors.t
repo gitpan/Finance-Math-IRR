@@ -1,7 +1,7 @@
 #!/usr/local/bin/perl
 #################################################################
 #
-#   $Id: 02_test_irr_errors.t,v 1.1 2007/04/11 12:22:52 erwan_lemonnier Exp $
+#   $Id: 02_test_irr_errors.t,v 1.2 2007/07/11 09:01:12 erwan_lemonnier Exp $
 #
 #   @author       erwan lemonnier
 #   @description  test xirr against garbage input
@@ -12,7 +12,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 19;
+use Test::More tests => 20;
 use lib "../lib/";
 
 use_ok('Finance::Math::IRR');
@@ -59,7 +59,8 @@ is($v,1,"and this simple cashflow has a 100% growth");
 
 # check last transaction
 eval { $v = xirr('precision' => 1.32, '2001-01-01' => 10, '2002-01-01' => 20); };
-ok( (defined $@ && $@ =~ /cashflow ends with a transaction having a positive amount/), "last transaction has positive amount");
+ok( !defined $@ || $@ eq "", "last transaction has positive amount");
+is($v,-3, "correct answer");
 
 # cashflows with end transaction 0
 eval { $v = xirr('precision' => 0.001,

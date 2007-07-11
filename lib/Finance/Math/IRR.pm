@@ -2,7 +2,7 @@
 #
 #   Finance::Math::IRR - Calculate the internal rate of return of a cash flow
 #
-#   $Id: IRR.pm,v 1.3 2007/04/18 09:49:19 erwan_lemonnier Exp $
+#   $Id: IRR.pm,v 1.4 2007/07/11 09:01:11 erwan_lemonnier Exp $
 #
 #   061215 erwan Started implementation
 #   061218 erwan Differentiate bugs from failures when calling secant() and brent()
@@ -13,6 +13,7 @@
 #   070404 erwan Error if last transaction is a positive amount. Added $DEBUG
 #   070411 erwan Return undef when cashflow has only 1 non zero transaction
 #   070418 erwan Update license
+#   070711 erwan Removed the restriction requiring the last transaction to be negative
 #
 
 package Finance::Math::IRR;
@@ -28,7 +29,7 @@ use Scalar::Util qw(looks_like_number);
 use base qw(Exporter);
 
 our @EXPORT = qw(xirr);
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 our $DEBUG = 0;
 
 #----------------------------------------------------------------
@@ -119,26 +120,21 @@ sub xirr {
 	}
     }
 
-    # check the last transaction in the cashflow
-    if ($cashflow{$date_end} > 0) {
-	# the last transaction must be a negative amount
-	croak "ERROR: the cashflow ends with a transaction having a positive amount: $date_end => ".$cashflow{$date_end};
-
-    } elsif ($cashflow{$date_end} == 0) {
+    if ($cashflow{$date_end} == 0) {
 	# the last value is 0: we may be able to handle it
 	# was the whole cashflow made of transactions with amount 0?
 	if (scalar keys %cashflow == 1) {
 	    _debug("all transactions in the cashflow have 0 in amount. IRR=0.");
 	    return 0;
 	}
-
-	# TODO: what if all other transactions have negative amounts?
     }
 
     if (scalar keys %cashflow < 2) {
 	# we got a cashflow with only 1 entry and can't calculate an irr on it
 	return undef;
     }
+
+    # TODO: what if all transactions have the same sign?
 
     # we want $precision on the irr, but can only steer the precision of 1/(1+irr), hence this ratio, that
     # should insure us the given precision even on the irr for irrs up to 1000%
@@ -386,7 +382,7 @@ See Math::Polynom, Math::Function::Roots.
 
 =head1 VERSION
 
-$Id: IRR.pm,v 1.3 2007/04/18 09:49:19 erwan_lemonnier Exp $
+$Id: IRR.pm,v 1.4 2007/07/11 09:01:11 erwan_lemonnier Exp $
 
 =head1 THANKS
 
@@ -398,9 +394,11 @@ in open source. For the curious, the code for XIRR is available in
 the sources of Gnumeric in the file 'plugins/fn-financial/functions.c' (as
 of Gnumeric 1.6.3).
 
+More thanks to Nicholas Caratzas for his efficient help in improving this code!
+
 =head1 AUTHOR
 
-Erwan Lemonnier C<< <erwan@cpan.org> >>, 
+Erwan Lemonnier C<< <erwan@cpan.org> >>,
 as part of the Pluto developer group at the Swedish Premium Pension Authority.
 
 =head1 LICENSE
