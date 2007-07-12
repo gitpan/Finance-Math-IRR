@@ -2,7 +2,7 @@
 #
 #   Finance::Math::IRR - Calculate the internal rate of return of a cash flow
 #
-#   $Id: IRR.pm,v 1.4 2007/07/11 09:01:11 erwan_lemonnier Exp $
+#   $Id: IRR.pm,v 1.5 2007/07/12 12:35:46 erwan_lemonnier Exp $
 #
 #   061215 erwan Started implementation
 #   061218 erwan Differentiate bugs from failures when calling secant() and brent()
@@ -29,7 +29,7 @@ use Scalar::Util qw(looks_like_number);
 use base qw(Exporter);
 
 our @EXPORT = qw(xirr);
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 our $DEBUG = 0;
 
 #----------------------------------------------------------------
@@ -382,7 +382,7 @@ See Math::Polynom, Math::Function::Roots.
 
 =head1 VERSION
 
-$Id: IRR.pm,v 1.4 2007/07/11 09:01:11 erwan_lemonnier Exp $
+$Id: IRR.pm,v 1.5 2007/07/12 12:35:46 erwan_lemonnier Exp $
 
 =head1 THANKS
 
@@ -394,7 +394,7 @@ in open source. For the curious, the code for XIRR is available in
 the sources of Gnumeric in the file 'plugins/fn-financial/functions.c' (as
 of Gnumeric 1.6.3).
 
-More thanks to Nicholas Caratzas for his efficient help in improving this code!
+More thanks to Nicholas Caratzas for his efficient help and sharp financial and mathematical insight!
 
 =head1 AUTHOR
 
